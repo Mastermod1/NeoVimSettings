@@ -124,6 +124,10 @@ function test() {
     g++ -g -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -fsanitize=address,undefined main.cpp && ./a.out < input
 }
 
+function test_no_dbg() {
+    g++ main.cpp && ./a.out < input
+}
+
 function lookfor() {
     find . -type f -iname "*$1*" 2>/dev/null 
 }

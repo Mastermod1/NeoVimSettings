@@ -50,11 +50,34 @@ require('lazy').setup({
 
       -- Useful status updates for LSP
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-      { 'j-hui/fidget.nvim', tag = 'legacy', opts = {} },
+      { 'j-hui/fidget.nvim',       tag = 'legacy', opts = {} },
 
       -- Additional lua configuration, makes nvim stuff amazing!
       'folke/neodev.nvim',
     },
+  },
+
+  {
+    "lervag/vimtex",
+    lazy = false,
+    ft = "tex",
+    init = function()
+      vim.g.vimtex_view_method = 'zathura'
+      vim.g.vimtex_compiler_method = 'latexmk'
+      vim.g.vimtex_compiler_latexmk = {
+        build_dir = '',
+        callback = 1,
+        continuous = 1,
+        executable = 'latexmk',
+        options = {
+          '-pdf',
+          '-interaction=nonstopmode',
+          '-file-line-error',
+          '-synctex=1',
+          '-xelatex'
+        },
+      }
+    end
   },
 
   {
@@ -74,7 +97,7 @@ require('lazy').setup({
   },
 
   -- Useful plugin to show you pending keybinds.
-  { 'folke/which-key.nvim', opts = {} },
+  { 'folke/which-key.nvim',  opts = {} },
   {
     -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
@@ -88,7 +111,8 @@ require('lazy').setup({
         changedelete = { text = '~' },
       },
       on_attach = function(bufnr)
-        vim.keymap.set('n', '<leader>gp', require('gitsigns').prev_hunk, { buffer = bufnr, desc = '[G]o to [P]revious Hunk' })
+        vim.keymap.set('n', '<leader>gp', require('gitsigns').prev_hunk,
+          { buffer = bufnr, desc = '[G]o to [P]revious Hunk' })
         vim.keymap.set('n', '<leader>gn', require('gitsigns').next_hunk, { buffer = bufnr, desc = '[G]o to [N]ext Hunk' })
         vim.keymap.set('n', '<leader>ph', require('gitsigns').preview_hunk, { buffer = bufnr, desc = '[P]review [H]unk' })
       end,
@@ -185,8 +209,8 @@ require('lazy').setup({
 }, {})
 
 require('gitblame').setup {
-     --Note how the `gitblame_` prefix is omitted in `setup`
-    enabled = true,
+  --Note how the `gitblame_` prefix is omitted in `setup`
+  enabled = true,
 }
 
 -- [[ Setting options ]]
@@ -435,7 +459,7 @@ vim.cmd("set path+=" .. cwd)
 
 local servers = {
   clangd = {
-    cmd = {"clangd",
+    cmd = { "clangd",
       "--background-index",
       "--log=verbose",
       -- "--query-driver=/home/mastermod1/.platformio/packages/toolchain-xtensa-esp32s3/bin/xtensa-esp32s3-elf-gcc*,/home/mastermod1/.platformio/packages/toolchain-xtensa-esp32s3/bin/xtensa-esp32s3-elf-g++*"
@@ -448,7 +472,7 @@ local servers = {
       }
     }
   },
-  html = { filetypes = { 'html', 'twig', 'hbs'} },
+  html = { filetypes = { 'html', 'twig', 'hbs' } },
   lua_ls = {
     Lua = {
       workspace = { checkThirdParty = false },
@@ -464,7 +488,27 @@ local tools = {
   buildifier = {},
   cmakelang = {},
   cmakelint = {},
+  latexindent = {},
 }
+
+-- Latex Format command
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "tex",
+  callback = function()
+    vim.api.nvim_buf_create_user_command(0, "Format", function()
+      local file = vim.fn.expand("%:p")
+      local cmd = "latexindent -l -m -s -w " .. vim.fn.shellescape(file)
+      vim.fn.jobstart(cmd, {
+        on_exit = function()
+          vim.schedule(function()
+            vim.cmd("edit!")
+            print("Formatted with latexindent")
+          end)
+        end,
+      })
+    end, {})
+  end,
+})
 
 -- Setup neovim lua configuration
 require('neodev').setup()
